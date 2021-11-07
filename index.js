@@ -19,6 +19,7 @@ async function run (){
         await client.connect();
         const database = client.db('doctors_portal');
         const appointmentsCollection = database.collection('appointments');
+        const usersCollection = database.collection('users');
 
         app.get('/appointments', async (req, res) =>{
           const email = req.query.email;
@@ -28,15 +29,32 @@ async function run (){
           const cursor = appointmentsCollection.find(query);
           const appointment = await cursor.toArray();
           res.json(appointment)
-        })
+        });
 
         app.post('/appointments', async (req, res) =>{
           const appointment = req.body;
           const result = await appointmentsCollection.insertOne(appointment);
           
-          console.log(result);
           res.json(result)
-        })
+        });
+
+        // store email, password login data
+        app.post('/users', async (req, res) => {
+          const user = req.body;
+          const result = await usersCollection.insertOne(user);
+          console.log(result);
+          res.json(result);
+        });
+
+        // store google login data
+        app.put('/users', async (req, res)=>{
+          const user = req.body;
+          const filter = { email: user.email };
+          const options = { upsert: true };
+          const updateDoc = {$set: user};
+          const result = await usersCollection.updateOne(filter, updateDoc, options);
+          res.json(result);
+        });
 
     }
     finally{
