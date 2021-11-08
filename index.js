@@ -23,7 +23,7 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
-
+// verify id token function as middleware
 async function verifyToken (req, res, next){
   if(req.headers?.authorization?.startsWith('Bearer ')){
     const token = req.headers.authorization.split(' ')[1];
@@ -83,7 +83,7 @@ async function run() {
       }
       res.json({ admin: isAdmin });
 
-    })
+    });
 
     // store google login data
     app.put('/users', async (req, res) => {
@@ -94,6 +94,7 @@ async function run() {
       const result = await usersCollection.updateOne(filter, updateDoc, options);
       res.json(result);
     });
+
 
     // Update an user to an admin with jwt token authentication
     app.put('/users/admin', verifyToken, async (req, res) => {
@@ -120,12 +121,12 @@ async function run() {
     // await client.close();
   }
 }
-run().catch(console.dir)
+run().catch(console.dir);
 
 app.get('/', (req, res) => {
-  res.send('Hello Doctors portal!')
+  res.send('Hello Doctors portal!');
 })
 
 app.listen(port, () => {
-  console.log(`Doctor's portal is listening port ${port}`)
+  console.log(`Doctor's portal is listening port ${port}`);
 })
