@@ -7,6 +7,7 @@ const { MongoClient } = require('mongodb');
 const ObjectId = require('mongodb').ObjectId;
 const port = process.env.PORT || 5000;
 const stripe = require('stripe')(process.env.STRIPE_SECRET);
+const fileUpload = require('express-fileupload');
 
 
 // doctors-portal-firebase-adminsdk.json
@@ -20,7 +21,8 @@ admin.initializeApp({
 
 // Middle Ware
 app.use(cors())
-app.use(express.json())
+app.use(express.json());
+app.use(fileUpload())
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.v2tgv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -50,6 +52,7 @@ async function run() {
     const database = client.db('doctors_portal');
     const appointmentsCollection = database.collection('appointments');
     const usersCollection = database.collection('users');
+    const doctorsCollection = database.collection('doctors');
 
     app.get('/appointments', verifyToken, async (req, res) => {
       const email = req.query.email;
@@ -85,6 +88,29 @@ async function run() {
       const result = await appointmentsCollection.updateOne(filter, updateDoc);
       res.json(result)
     });
+
+
+    // get doctors
+    app.get('/doctors', async (req, res) => {
+      const result = await doctorsCollection.find({}).toArray();
+      res.json(result);
+    })
+
+    // Post doctor
+    app.post('/doctors', async (req, res) => {
+      console.log('body', req.body)
+      console.log('files', req.files)
+      const name = req.body.name;
+      const email = req.body.email;
+      const pic = req.files.image;
+      const picData = pic.data;
+      const encodedPic = picData.toString('base64');
+      const image = Buffer.from(picData, 'base64');
+      const doctor = { name, email, image };
+      const result = await doctorsCollection.insertOne(doctor);
+
+      res.json(result);
+    })
 
 
     // store email, password login data
